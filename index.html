@@ -9,6 +9,7 @@ body {
     background: #0f172a;
     color: white;
     font-family: Arial;
+    margin: 0;
     padding: 20px;
 }
 
@@ -16,226 +17,46 @@ h1 {
     text-align: center;
 }
 
+/* kontener */
+.container {
+    max-width: 700px;
+    margin: auto;
+}
+
+/* karta */
 .card {
     background: #1f2937;
-    padding: 10px;
+    padding: 12px;
     margin-top: 10px;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    transition: 0.2s;
 }
 
-input, textarea {
-    width: 100%;
-    margin: 5px 0;
-    padding: 8px;
+.card:hover {
+    transform: scale(1.02);
 }
 
-button {
-    padding: 8px;
-    margin-top: 5px;
-}
-
-.hidden {
-    display: none;
-}
-
-.adminPanel {
-    background: #111827;
-    padding: 15px;
-    border: 2px solid red;
-    margin-bottom: 20px;
-}
-
-/* 🔍 wyszukiwarka */
-#search {
-    margin-bottom: 15px;
-    padding: 10px;
-}
-
-/* 🖼️ miniaturka */
+/* miniaturka */
 .thumb {
     width: 70px;
     height: 70px;
     object-fit: cover;
+    border-radius: 8px;
+}
+
+/* tekst */
+.info {
+    flex: 1;
+}
+
+/* przycisk join */
+.join {
+    background: #22c55e;
+    border: none;
+    padding: 6px 10px;
     border-radius: 6px;
-    float: right;
-    margin-left: 10px;
-}
-
-/* 🔥 ukryty przycisk */
-#secretBtn {
-    position: fixed;
-    bottom: 5px;
-    right: 5px;
-    width: 40px;
-    height: 40px;
-    background: #0f172a;
-    opacity: 0;
-    cursor: pointer;
-}
-</style>
-
-</head>
-<body>
-
-<h1>Serwery Roblox</h1>
-
-<!-- 🔍 WYSZUKIWARKA -->
-<input id="search" placeholder="🔍 Szukaj serwera...">
-
-<!-- PANEL ADMINA -->
-<div id="adminPanel" class="adminPanel hidden">
-
-    <h2>Panel admina</h2>
-
-    <!-- LOGIN -->
-    <div id="loginBox">
-        <input id="password" type="password" placeholder="Hasło">
-        <button onclick="login()">Zaloguj</button>
-    </div>
-
-    <!-- DODAWANIE -->
-    <div id="adminContent" class="hidden">
-        <h3>Dodaj serwer</h3>
-        <input id="name" placeholder="Nazwa">
-        <input id="game" placeholder="Gra">
-        <input id="link" placeholder="Link">
-        <textarea id="desc" placeholder="Opis"></textarea>
-
-        <!-- 📸 MINIATURKA -->
-        <input id="image" type="file">
-
-        <button onclick="addServer()">Dodaj</button>
-    </div>
-
-</div>
-
-<!-- LISTA -->
-<div id="list"></div>
-
-<!-- 🔥 ukryty przycisk -->
-<div id="secretBtn"></div>
-
-<script>
-
-let servers = JSON.parse(localStorage.getItem("servers") || "[]");
-let isAdmin = false;
-
-// 🔑 STRZAŁKA ↑
-document.addEventListener("keydown", function(e) {
-    if (e.key === "ArrowUp") {
-        document.getElementById("adminPanel").classList.toggle("hidden");
-    }
-});
-
-// 🔥 UKRYTY PRZYCISK
-document.getElementById("secretBtn").onclick = function() {
-    document.getElementById("adminPanel").classList.toggle("hidden");
-};
-
-// 🔐 LOGIN
-function login() {
-    let pass = document.getElementById("password").value;
-
-    if (pass === "admin123") {
-        isAdmin = true;
-
-        document.getElementById("adminContent").classList.remove("hidden");
-        document.getElementById("loginBox").classList.add("hidden");
-
-        alert("Zalogowano!");
-        render();
-    } else {
-        alert("Złe hasło!");
-    }
-}
-
-// ➕ DODAWANIE
-function addServer() {
-    if (!isAdmin) return;
-
-    let name = document.getElementById("name").value;
-    let game = document.getElementById("game").value;
-    let link = document.getElementById("link").value;
-    let desc = document.getElementById("desc").value;
-
-    let file = document.getElementById("image").files[0];
-
-    if (!name || !game || !link) {
-        alert("Uzupełnij dane!");
-        return;
-    }
-
-    if (file) {
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            saveServer(name, game, link, desc, e.target.result);
-        };
-        reader.readAsDataURL(file);
-    } else {
-        saveServer(name, game, link, desc, "");
-    }
-}
-
-function saveServer(name, game, link, desc, img) {
-    servers.push({ name, game, link, desc, img });
-
-    save();
-    render();
-}
-
-// ❌ USUWANIE
-function deleteServer(i) {
-    if (!isAdmin) return;
-
-    servers.splice(i, 1);
-    save();
-    render();
-}
-
-// 💾 ZAPIS
-function save() {
-    localStorage.setItem("servers", JSON.stringify(servers));
-}
-
-// 🔍 WYSZUKIWANIE
-document.getElementById("search").addEventListener("input", function() {
-    render(this.value);
-});
-
-// 📦 WYŚWIETLANIE
-function render(filter = "") {
-    let list = document.getElementById("list");
-    list.innerHTML = "";
-
-    let filtered = servers.filter(s =>
-        s.name.toLowerCase().includes(filter.toLowerCase()) ||
-        s.game.toLowerCase().includes(filter.toLowerCase())
-    );
-
-    if (filtered.length === 0) {
-        list.innerHTML = "<p>Brak serwerów</p>";
-        return;
-    }
-
-    filtered.forEach((s, i) => {
-        let div = document.createElement("div");
-        div.className = "card";
-
-        div.innerHTML =
-            (s.img ? "<img src='" + s.img + "' class='thumb'>" : "") +
-            "<b>" + s.name + "</b> (" + s.game + ")<br>" +
-            (s.desc || "Brak opisu") + "<br>" +
-            "<a href='" + s.link + "' target='_blank'>Dołącz</a><br>" +
-            (isAdmin ? "<button onclick='deleteServer(" + i + ")'>Usuń</button>" : "");
-
-        list.appendChild(div);
-    });
-}
-
-render();
-
-</script>
-
-</body>
-</html>
+    text-decoration: none;
+    color: black;
