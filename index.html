@@ -72,7 +72,7 @@ button {
 
     <div id="loginBox">
         <input id="password" type="password" placeholder="Hasło">
-        <button onclick="login()">Zaloguj</button>
+        <button id="loginBtn">Zaloguj</button>
     </div>
 
     <div id="adminContent" class="hidden">
@@ -80,7 +80,7 @@ button {
         <input id="game" placeholder="Gra">
         <input id="link" placeholder="Link">
         <textarea id="desc" placeholder="Opis"></textarea>
-        <button onclick="addServer()">Dodaj</button>
+        <button id="addBtn">Dodaj</button>
     </div>
 
 </div>
@@ -93,11 +93,10 @@ button {
 
 <script type="module">
 
-// 🔥 FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-// ✅ TWÓJ CONFIG
+// ✅ TWOJE DANE
 const firebaseConfig = {
   apiKey: "AIzaSyBsr99aUgM4rRinUEMPpP8ZR2VvdiQ9JFo",
   authDomain: "roblox-serverd.firebaseapp.com",
@@ -113,7 +112,8 @@ const db = getFirestore(app);
 
 let isAdmin = false;
 
-// panel
+// ================== PANEL ==================
+
 document.getElementById("secretBtn").onclick = () => {
     document.getElementById("adminPanel").classList.toggle("hidden");
 };
@@ -124,8 +124,9 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// login
-function login() {
+// ================== LOGIN ==================
+
+document.getElementById("loginBtn").onclick = function () {
     let pass = document.getElementById("password").value;
 
     if (pass === "admin123") {
@@ -135,16 +136,23 @@ function login() {
     } else {
         alert("Złe hasło");
     }
-}
+};
 
-// ➕ DODAWANIE DO FIREBASE
-async function addServer() {
+// ================== DODAWANIE ==================
+
+document.getElementById("addBtn").onclick = async function () {
+
     if (!isAdmin) return;
 
     let name = document.getElementById("name").value;
     let game = document.getElementById("game").value;
     let link = document.getElementById("link").value;
     let desc = document.getElementById("desc").value;
+
+    if (!name || !game || !link) {
+        alert("Uzupełnij dane");
+        return;
+    }
 
     await addDoc(collection(db, "servers"), {
         name,
@@ -154,22 +162,26 @@ async function addServer() {
     });
 
     loadServers();
-}
+};
 
-// ❌ USUWANIE
+// ================== USUWANIE ==================
+
 async function deleteServer(id) {
     await deleteDoc(doc(db, "servers", id));
     loadServers();
 }
 
-// 📦 POBIERANIE Z BAZY
+// ================== POBIERANIE ==================
+
 async function loadServers(filter = "") {
+
     let list = document.getElementById("list");
     list.innerHTML = "";
 
     const querySnapshot = await getDocs(collection(db, "servers"));
 
     querySnapshot.forEach((docSnap) => {
+
         let s = docSnap.data();
 
         if (
@@ -190,7 +202,8 @@ async function loadServers(filter = "") {
     });
 }
 
-// 🔍 SEARCH
+// ================== SEARCH ==================
+
 document.getElementById("search").oninput = function () {
     loadServers(this.value);
 };
