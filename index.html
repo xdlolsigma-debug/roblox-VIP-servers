@@ -1,36 +1,59 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <title>Prywatne serwery Roblox</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<title>Serwery Roblox</title>
 
-        header {
-            background: #111827;
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid #1f2937;
-        }
+<style>
+body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial;
+    padding: 20px;
+}
+input, textarea {
+    width: 100%;
+    margin: 5px 0;
+    padding: 8px;
+}
+button {
+    padding: 8px;
+    margin-top: 10px;
+}
+</style>
 
-        header h1 {
-            margin: 0;
-            font-size: 26px;
-        }
+</head>
+<body>
 
-        main {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 0 15px 40px;
-        }
+<h1>Serwery Roblox</h1>
 
-        .card {
-            background: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 8px;
+<form id="form">
+    <input id="name" placeholder="Nazwa" required>
+    <input id="game" placeholder="Gra" required>
+    <input id="link" placeholder="Link" required>
+    <textarea id="desc" placeholder="Opis"></textarea>
+    <button type="submit">Dodaj</button>
+</form>
+
+<hr>
+
+<ul id="list"></ul>
+
+<script>
+
+let servers = JSON.parse(localStorage.getItem("servers") || "[]");
+
+function save() {
+    localStorage.setItem("servers", JSON.stringify(servers));
+}
+
+function render() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    servers.forEach(function(s) {
+        const li = document.createElement("li");
+
+        li.innerHTML =
+            "<b>" + s.name + "</b> (" + s.game + ")<br>" +
+            (s.desc || "Brak opisu") + "<br>" +
