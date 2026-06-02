@@ -12,18 +12,26 @@ body {
     padding: 20px;
 }
 
+.container {
+    max-width: 700px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+}
+
 .card {
     background: #1f2937;
-    padding: 10px;
+    padding: 12px;
     margin-top: 10px;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 10px;
 }
 
 input, textarea {
     width: 100%;
     margin: 5px 0;
-    padding: 8px;
+    padding: 10px;
 }
 
 button {
@@ -38,26 +46,9 @@ button {
 .adminPanel {
     background: #111827;
     padding: 15px;
-    border: 2px solid red;
-    margin-bottom: 20px;
-}
-
-#search {
     margin-bottom: 15px;
-    padding: 10px;
 }
 
-/* miniaturka */
-.thumb {
-    width: 70px;
-    height: 70px;
-    object-fit: cover;
-    border-radius: 6px;
-    float: right;
-    margin-left: 10px;
-}
-
-/* ukryty przycisk */
 #secretBtn {
     position: fixed;
     bottom: 5px;
@@ -65,20 +56,19 @@ button {
     width: 40px;
     height: 40px;
     opacity: 0;
-    cursor: pointer;
 }
 </style>
-</head>
 
+</head>
 <body>
 
-<h1>Serwery Roblox</h1>
+<div class="container">
 
-<input id="search" placeholder="🔍 Szukaj serwera...">
+<h1>🎮 Serwery Roblox</h1>
+
+<input id="search" placeholder="🔍 Szukaj...">
 
 <div id="adminPanel" class="adminPanel hidden">
-
-    <h2>Panel admina</h2>
 
     <div id="loginBox">
         <input id="password" type="password" placeholder="Hasło">
@@ -86,12 +76,10 @@ button {
     </div>
 
     <div id="adminContent" class="hidden">
-        <h3>Dodaj serwer</h3>
         <input id="name" placeholder="Nazwa">
         <input id="game" placeholder="Gra">
         <input id="link" placeholder="Link">
         <textarea id="desc" placeholder="Opis"></textarea>
-        <input id="image" type="file">
         <button onclick="addServer()">Dodaj</button>
     </div>
 
@@ -99,24 +87,42 @@ button {
 
 <div id="list"></div>
 
+</div>
+
 <div id="secretBtn"></div>
 
-<script>
+<script type="module">
 
-let servers = JSON.parse(localStorage.getItem("servers") || "[]");
+// 🔥 FIREBASE
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+// ✅ TWÓJ CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyBsr99aUgM4rRinUEMPpP8ZR2VvdiQ9JFo",
+  authDomain: "roblox-serverd.firebaseapp.com",
+  projectId: "roblox-serverd",
+  storageBucket: "roblox-serverd.firebasestorage.app",
+  messagingSenderId: "742171650132",
+  appId: "1:742171650132:web:d34bef0c89612ed6d3e5c1",
+  measurementId: "G-7BDJ25X93X"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 let isAdmin = false;
 
-// strzałka ↑
-document.addEventListener("keydown", function(e) {
+// panel
+document.getElementById("secretBtn").onclick = () => {
+    document.getElementById("adminPanel").classList.toggle("hidden");
+};
+
+document.addEventListener("keydown", e => {
     if (e.key === "ArrowUp") {
         document.getElementById("adminPanel").classList.toggle("hidden");
     }
 });
-
-// ukryty przycisk
-document.getElementById("secretBtn").onclick = function() {
-    document.getElementById("adminPanel").classList.toggle("hidden");
-};
 
 // login
 function login() {
@@ -126,15 +132,13 @@ function login() {
         isAdmin = true;
         document.getElementById("adminContent").classList.remove("hidden");
         document.getElementById("loginBox").classList.add("hidden");
-        alert("Zalogowano!");
-        render();
     } else {
-        alert("Złe hasło!");
+        alert("Złe hasło");
     }
 }
 
-// ✅ NAPRAWIONA FUNKCJA
-function addServer() {
+// ➕ DODAWANIE DO FIREBASE
+async function addServer() {
     if (!isAdmin) return;
 
     let name = document.getElementById("name").value;
@@ -142,89 +146,57 @@ function addServer() {
     let link = document.getElementById("link").value;
     let desc = document.getElementById("desc").value;
 
-    let file = document.getElementById("image").files[0];
+    await addDoc(collection(db, "servers"), {
+        name,
+        game,
+        link,
+        desc
+    });
 
-    if (!name || !game || !link) {
-        alert("Uzupełnij dane!");
-        return;
-    }
-
-    if (file) {
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            servers.push({
-                name: name,
-                game: game,
-                link: link,
-                desc: desc,
-                img: e.target.result
-            });
-            save();
-            render();
-        };
-        reader.readAsDataURL(file);
-    } else {
-        servers.push({
-            name: name,
-            game: game,
-            link: link,
-            desc: desc,
-            img: ""
-        });
-        save();
-        render();
-    }
+    loadServers();
 }
 
-// usuwanie
-function deleteServer(i) {
-    if (!isAdmin) return;
-    servers.splice(i, 1);
-    save();
-    render();
+// ❌ USUWANIE
+async function deleteServer(id) {
+    await deleteDoc(doc(db, "servers", id));
+    loadServers();
 }
 
-// zapis
-function save() {
-    localStorage.setItem("servers", JSON.stringify(servers));
-}
-
-// wyszukiwarka
-document.getElementById("search").addEventListener("input", function() {
-    render(this.value);
-});
-
-// render
-function render(filter = "") {
+// 📦 POBIERANIE Z BAZY
+async function loadServers(filter = "") {
     let list = document.getElementById("list");
     list.innerHTML = "";
 
-    let filtered = servers.filter(s =>
-        s.name.toLowerCase().includes(filter.toLowerCase()) ||
-        s.game.toLowerCase().includes(filter.toLowerCase())
-    );
+    const querySnapshot = await getDocs(collection(db, "servers"));
 
-    if (filtered.length === 0) {
-        list.innerHTML = "<p>Brak serwerów</p>";
-        return;
-    }
+    querySnapshot.forEach((docSnap) => {
+        let s = docSnap.data();
 
-    filtered.forEach((s, i) => {
+        if (
+            !s.name.toLowerCase().includes(filter.toLowerCase()) &&
+            !s.game.toLowerCase().includes(filter.toLowerCase())
+        ) return;
+
         let div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML =
-            (s.img ? "<img src='" + s.img + "' class='thumb'>" : "") +
             "<b>" + s.name + "</b> (" + s.game + ")<br>" +
-            (s.desc || "Brak opisu") + "<br>" +
+            s.desc + "<br>" +
             "<a href='" + s.link + "' target='_blank'>Dołącz</a><br>" +
-            (isAdmin ? "<button onclick='deleteServer(" + i + ")'>Usuń</button>" : "");
+            (isAdmin ? "<button onclick='deleteServer(\"" + docSnap.id + "\")'>Usuń</button>" : "");
 
         list.appendChild(div);
     });
 }
 
-render();
+// 🔍 SEARCH
+document.getElementById("search").oninput = function () {
+    loadServers(this.value);
+};
+
+// start
+loadServers();
 
 </script>
 
