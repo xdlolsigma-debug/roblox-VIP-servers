@@ -13,17 +13,15 @@ body {
     padding: 20px;
 }
 
-h1 {
-    text-align: center;
-}
-
-/* kontener */
 .container {
     max-width: 700px;
     margin: auto;
 }
 
-/* karta */
+h1 {
+    text-align: center;
+}
+
 .card {
     background: #1f2937;
     padding: 12px;
@@ -32,14 +30,8 @@ h1 {
     display: flex;
     gap: 10px;
     align-items: center;
-    transition: 0.2s;
 }
 
-.card:hover {
-    transform: scale(1.02);
-}
-
-/* miniaturka */
 .thumb {
     width: 70px;
     height: 70px;
@@ -47,16 +39,180 @@ h1 {
     border-radius: 8px;
 }
 
-/* tekst */
 .info {
     flex: 1;
 }
 
-/* przycisk join */
 .join {
     background: #22c55e;
-    border: none;
     padding: 6px 10px;
     border-radius: 6px;
     text-decoration: none;
     color: black;
+}
+
+.delete {
+    background: red;
+    color: white;
+    border: none;
+    margin-top: 5px;
+}
+
+input, textarea {
+    width: 100%;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+}
+
+.hidden {
+    display: none;
+}
+
+.adminPanel {
+    background: #111827;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+/* ukryty przycisk */
+#secretBtn {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    width: 40px;
+    height: 40px;
+    opacity: 0;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>🎮 Serwery Roblox</h1>
+
+<input id="search" placeholder="🔍 Szukaj serwera...">
+
+<div id="adminPanel" class="adminPanel hidden">
+
+    <div id="loginBox">
+        <input id="password" type="password" placeholder="Hasło">
+        <button onclick="login()">Zaloguj</button>
+    </div>
+
+    <div id="adminContent" class="hidden">
+        <input id="name" placeholder="Nazwa">
+        <input id="game" placeholder="Gra">
+        <input id="link" placeholder="Link">
+        <textarea id="desc" placeholder="Opis"></textarea>
+        <input id="image" type="file">
+        <button onclick="addServer()">Dodaj</button>
+    </div>
+
+</div>
+
+<div id="list"></div>
+
+</div>
+
+<div id="secretBtn"></div>
+
+<script>
+
+let servers = JSON.parse(localStorage.getItem("servers") || "[]");
+let isAdmin = false;
+
+// panel
+document.getElementById("secretBtn").onclick = () => {
+    document.getElementById("adminPanel").classList.toggle("hidden");
+};
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") {
+        document.getElementById("adminPanel").classList.toggle("hidden");
+    }
+});
+
+// login
+function login() {
+    let pass = document.getElementById("password").value;
+
+    if (pass === "admin123") {
+        isAdmin = true;
+        document.getElementById("adminContent").classList.remove("hidden");
+        document.getElementById("loginBox").classList.add("hidden");
+        render();
+    } else {
+        alert("Złe hasło");
+    }
+}
+
+// ✅ POPRAWIONE
+function addServer() {
+    if (!isAdmin) return;
+
+    let name = document.getElementById("name").value;
+    let game = document.getElementById("game").value;
+    let link = document.getElementById("link").value;
+    let desc = document.getElementById("desc").value;
+    let file = document.getElementById("image").files[0];
+
+    if (!name || !game || !link) {
+        alert("Uzupełnij dane");
+        return;
+    }
+
+    if (file) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            servers.push({
+                name,
+                game,
+                link,
+                desc,
+                img: e.target.result
+            });
+            save();
+            render();
+        };
+        reader.readAsDataURL(file);
+    } else {
+        servers.push({
+            name,
+            game,
+            link,
+            desc,
+            img: ""
+        });
+        save();
+        render();
+    }
+}
+
+// delete
+function deleteServer(i) {
+    servers.splice(i, 1);
+    save();
+    render();
+}
+
+function save() {
+    localStorage.setItem("servers", JSON.stringify(servers));
+}
+
+// search
+document.getElementById("search").oninput = function() {
+    render(this.value);
+};
+
+// ✅ render (najczęstsze źródło błędów — już poprawione)
+function render(filter = "") {
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    let filtered = servers.filter(s =>
+        s.name.toLowerCase().includes(filter.toLowerCase()) ||
