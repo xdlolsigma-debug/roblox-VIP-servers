@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <title>Serwery Roblox</title>
@@ -12,8 +12,11 @@ body {
     padding: 20px;
 }
 
-.hidden {
-    display: none;
+.card {
+    background: #1f2937;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
 }
 
 input, textarea {
@@ -27,16 +30,27 @@ button {
     margin-top: 5px;
 }
 
-.card {
-    background: #1f2937;
-    padding: 10px;
-    margin-top: 10px;
+.hidden {
+    display: none;
 }
 
-.admin {
+.adminPanel {
     background: #111827;
     padding: 15px;
     border: 2px solid red;
+    margin-bottom: 20px;
+}
+
+/* 🔥 UKRYTY PRZYCISK */
+#secretBtn {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    width: 40px;
+    height: 40px;
+    background: #0f172a;
+    opacity: 0; /* niewidoczny */
+    cursor: pointer;
 }
 </style>
 
@@ -46,12 +60,17 @@ button {
 <h1>Serwery Roblox</h1>
 
 <!-- PANEL ADMINA -->
-<div id="adminPanel" class="admin hidden">
-    <h2>Panel admina</h2>
-    
-    <input id="password" type="password" placeholder="Hasło">
-    <button onclick="login()">Zaloguj</button>
+<div id="adminPanel" class="adminPanel hidden">
 
+    <h2>Panel admina</h2>
+
+    <!-- LOGIN -->
+    <div id="loginBox">
+        <input id="password" type="password" placeholder="Hasło">
+        <button onclick="login()">Zaloguj</button>
+    </div>
+
+    <!-- PANEL PO ZALOGOWANIU -->
     <div id="adminContent" class="hidden">
         <h3>Dodaj serwer</h3>
         <input id="name" placeholder="Nazwa">
@@ -60,17 +79,109 @@ button {
         <textarea id="desc" placeholder="Opis"></textarea>
         <button onclick="addServer()">Dodaj</button>
     </div>
+
 </div>
 
 <!-- LISTA -->
 <div id="list"></div>
+
+<!-- 🔥 UKRYTY PRZYCISK -->
+<div id="secretBtn"></div>
 
 <script>
 
 let servers = JSON.parse(localStorage.getItem("servers") || "[]");
 let isAdmin = false;
 
-// STRZAŁKA W GÓRĘ = OTWÓRZ PANEL
+// 🔑 STRZAŁKA ↑
 document.addEventListener("keydown", function(e) {
     if (e.key === "ArrowUp") {
-        let panel = document.getElementById("adminPanel");
+        document.getElementById("adminPanel").classList.toggle("hidden");
+    }
+});
+
+// 🔥 UKRYTY PRZYCISK (klik w róg)
+document.getElementById("secretBtn").onclick = function() {
+    document.getElementById("adminPanel").classList.toggle("hidden");
+};
+
+// 🔐 LOGIN
+function login() {
+    let pass = document.getElementById("password").value;
+
+    if (pass === "admin123") {  // TU ZMIENIASZ HASŁO
+        isAdmin = true;
+
+        document.getElementById("adminContent").classList.remove("hidden");
+        document.getElementById("loginBox").classList.add("hidden");
+
+        alert("Zalogowano!");
+    } else {
+        alert("Złe hasło!");
+    }
+}
+
+// ➕ DODAWANIE
+function addServer() {
+    if (!isAdmin) return;
+
+    let name = document.getElementById("name").value;
+    let game = document.getElementById("game").value;
+    let link = document.getElementById("link").value;
+    let desc = document.getElementById("desc").value;
+
+    if (!name || !game || !link) {
+        alert("Uzupełnij dane!");
+        return;
+    }
+
+    servers.push({ name, game, link, desc });
+
+    save();
+    render();
+}
+
+// ❌ USUWANIE
+function deleteServer(i) {
+    if (!isAdmin) return;
+
+    servers.splice(i, 1);
+    save();
+    render();
+}
+
+// 💾 ZAPIS
+function save() {
+    localStorage.setItem("servers", JSON.stringify(servers));
+}
+
+// 📦 WYŚWIETLANIE
+function render() {
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    if (servers.length === 0) {
+        list.innerHTML = "<p>Brak serwerów</p>";
+        return;
+    }
+
+    servers.forEach((s, i) => {
+        let div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML =
+            "<b>" + s.name + "</b> (" + s.game + ")<br>" +
+            (s.desc || "Brak opisu") + "<br>" +
+            "<a href='" + s.link + "' target='_blank'>Dołącz</a><br>" +
+            (isAdmin ? "<button onclick='deleteServer(" + i + ")'>Usuń</button>" : "");
+
+        list.appendChild(div);
+    });
+}
+
+render();
+
+</script>
+
+</body>
+</html>
