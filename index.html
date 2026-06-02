@@ -41,15 +41,20 @@ button {
     margin-bottom: 20px;
 }
 
-/* 🔥 UKRYTY PRZYCISK */
+img {
+    max-width: 100%;
+    border-radius: 6px;
+    margin-top: 5px;
+}
+
+/* 🔥 ukryty przycisk */
 #secretBtn {
     position: fixed;
     bottom: 5px;
     right: 5px;
     width: 40px;
     height: 40px;
-    background: #0f172a;
-    opacity: 0; /* niewidoczny */
+    opacity: 0;
     cursor: pointer;
 }
 </style>
@@ -59,33 +64,36 @@ button {
 
 <h1>Serwery Roblox</h1>
 
+<!-- 🔍 WYSZUKIWARKA -->
+<input id="search" placeholder="🔍 Szukaj serwera...">
+
 <!-- PANEL ADMINA -->
 <div id="adminPanel" class="adminPanel hidden">
 
     <h2>Panel admina</h2>
 
-    <!-- LOGIN -->
     <div id="loginBox">
         <input id="password" type="password" placeholder="Hasło">
         <button onclick="login()">Zaloguj</button>
     </div>
 
-    <!-- PANEL PO ZALOGOWANIU -->
     <div id="adminContent" class="hidden">
         <h3>Dodaj serwer</h3>
         <input id="name" placeholder="Nazwa">
         <input id="game" placeholder="Gra">
         <input id="link" placeholder="Link">
         <textarea id="desc" placeholder="Opis"></textarea>
+
+        <!-- 🖼️ ZDJĘCIE -->
+        <input id="image" type="file">
+
         <button onclick="addServer()">Dodaj</button>
     </div>
 
 </div>
 
-<!-- LISTA -->
 <div id="list"></div>
 
-<!-- 🔥 UKRYTY PRZYCISK -->
 <div id="secretBtn"></div>
 
 <script>
@@ -100,7 +108,7 @@ document.addEventListener("keydown", function(e) {
     }
 });
 
-// 🔥 UKRYTY PRZYCISK (klik w róg)
+// 🔥 UKRYTY PRZYCISK
 document.getElementById("secretBtn").onclick = function() {
     document.getElementById("adminPanel").classList.toggle("hidden");
 };
@@ -109,13 +117,14 @@ document.getElementById("secretBtn").onclick = function() {
 function login() {
     let pass = document.getElementById("password").value;
 
-    if (pass === "admin123") {  // TU ZMIENIASZ HASŁO
+    if (pass === "admin123") {
         isAdmin = true;
 
         document.getElementById("adminContent").classList.remove("hidden");
         document.getElementById("loginBox").classList.add("hidden");
 
         alert("Zalogowano!");
+        render();
     } else {
         alert("Złe hasło!");
     }
@@ -130,12 +139,32 @@ function addServer() {
     let link = document.getElementById("link").value;
     let desc = document.getElementById("desc").value;
 
+    let file = document.getElementById("image").files[0];
+
     if (!name || !game || !link) {
         alert("Uzupełnij dane!");
         return;
     }
 
-    servers.push({ name, game, link, desc });
+    if (file) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            saveServer(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        saveServer("");
+    }
+}
+
+function saveServer(img) {
+    servers.push({
+        name,
+        game,
+        link,
+        desc,
+        img
+    });
 
     save();
     render();
@@ -155,23 +184,34 @@ function save() {
     localStorage.setItem("servers", JSON.stringify(servers));
 }
 
+// 🔍 WYSZUKIWANIE
+document.getElementById("search").addEventListener("input", function() {
+    render(this.value);
+});
+
 // 📦 WYŚWIETLANIE
-function render() {
+function render(filter = "") {
     let list = document.getElementById("list");
     list.innerHTML = "";
 
-    if (servers.length === 0) {
+    let filtered = servers.filter(s =>
+        s.name.toLowerCase().includes(filter.toLowerCase()) ||
+        s.game.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    if (filtered.length === 0) {
         list.innerHTML = "<p>Brak serwerów</p>";
         return;
     }
 
-    servers.forEach((s, i) => {
+    filtered.forEach((s, i) => {
         let div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML =
             "<b>" + s.name + "</b> (" + s.game + ")<br>" +
             (s.desc || "Brak opisu") + "<br>" +
+            (s.img ? "<img src='" + s.img + "'>" : "") +
             "<a href='" + s.link + "' target='_blank'>Dołącz</a><br>" +
             (isAdmin ? "<button onclick='deleteServer(" + i + ")'>Usuń</button>" : "");
 
