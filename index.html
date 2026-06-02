@@ -12,11 +12,16 @@ body {
     padding: 20px;
 }
 
+h1 {
+    text-align: center;
+}
+
 .card {
     background: #1f2937;
     padding: 10px;
     margin-top: 10px;
     border-radius: 8px;
+    overflow: hidden;
 }
 
 input, textarea {
@@ -41,10 +46,20 @@ button {
     margin-bottom: 20px;
 }
 
-img {
-    max-width: 100%;
+/* 🔍 wyszukiwarka */
+#search {
+    margin-bottom: 15px;
+    padding: 10px;
+}
+
+/* 🖼️ miniaturka */
+.thumb {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
     border-radius: 6px;
-    margin-top: 5px;
+    float: right;
+    margin-left: 10px;
 }
 
 /* 🔥 ukryty przycisk */
@@ -54,6 +69,7 @@ img {
     right: 5px;
     width: 40px;
     height: 40px;
+    background: #0f172a;
     opacity: 0;
     cursor: pointer;
 }
@@ -72,11 +88,13 @@ img {
 
     <h2>Panel admina</h2>
 
+    <!-- LOGIN -->
     <div id="loginBox">
         <input id="password" type="password" placeholder="Hasło">
         <button onclick="login()">Zaloguj</button>
     </div>
 
+    <!-- DODAWANIE -->
     <div id="adminContent" class="hidden">
         <h3>Dodaj serwer</h3>
         <input id="name" placeholder="Nazwa">
@@ -84,7 +102,7 @@ img {
         <input id="link" placeholder="Link">
         <textarea id="desc" placeholder="Opis"></textarea>
 
-        <!-- 🖼️ ZDJĘCIE -->
+        <!-- 📸 MINIATURKA -->
         <input id="image" type="file">
 
         <button onclick="addServer()">Dodaj</button>
@@ -92,8 +110,10 @@ img {
 
 </div>
 
+<!-- LISTA -->
 <div id="list"></div>
 
+<!-- 🔥 ukryty przycisk -->
 <div id="secretBtn"></div>
 
 <script>
@@ -149,22 +169,16 @@ function addServer() {
     if (file) {
         let reader = new FileReader();
         reader.onload = function(e) {
-            saveServer(e.target.result);
+            saveServer(name, game, link, desc, e.target.result);
         };
         reader.readAsDataURL(file);
     } else {
-        saveServer("");
+        saveServer(name, game, link, desc, "");
     }
 }
 
-function saveServer(img) {
-    servers.push({
-        name,
-        game,
-        link,
-        desc,
-        img
-    });
+function saveServer(name, game, link, desc, img) {
+    servers.push({ name, game, link, desc, img });
 
     save();
     render();
@@ -209,9 +223,9 @@ function render(filter = "") {
         div.className = "card";
 
         div.innerHTML =
+            (s.img ? "<img src='" + s.img + "' class='thumb'>" : "") +
             "<b>" + s.name + "</b> (" + s.game + ")<br>" +
             (s.desc || "Brak opisu") + "<br>" +
-            (s.img ? "<img src='" + s.img + "'>" : "") +
             "<a href='" + s.link + "' target='_blank'>Dołącz</a><br>" +
             (isAdmin ? "<button onclick='deleteServer(" + i + ")'>Usuń</button>" : "");
 
