@@ -9,61 +9,26 @@ body {
     background: #0f172a;
     color: white;
     font-family: Arial;
-    margin: 0;
     padding: 20px;
-}
-
-.container {
-    max-width: 700px;
-    margin: auto;
-}
-
-h1 {
-    text-align: center;
 }
 
 .card {
     background: #1f2937;
-    padding: 12px;
+    padding: 10px;
     margin-top: 10px;
-    border-radius: 10px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.thumb {
-    width: 70px;
-    height: 70px;
-    object-fit: cover;
     border-radius: 8px;
-}
-
-.info {
-    flex: 1;
-}
-
-.join {
-    background: #22c55e;
-    padding: 6px 10px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: black;
-}
-
-.delete {
-    background: red;
-    color: white;
-    border: none;
-    margin-top: 5px;
+    overflow: hidden;
 }
 
 input, textarea {
     width: 100%;
     margin: 5px 0;
-    padding: 10px;
-    border-radius: 6px;
-    border: none;
+    padding: 8px;
+}
+
+button {
+    padding: 8px;
+    margin-top: 5px;
 }
 
 .hidden {
@@ -73,8 +38,23 @@ input, textarea {
 .adminPanel {
     background: #111827;
     padding: 15px;
-    border-radius: 10px;
+    border: 2px solid red;
+    margin-bottom: 20px;
+}
+
+#search {
     margin-bottom: 15px;
+    padding: 10px;
+}
+
+/* miniaturka */
+.thumb {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    float: right;
+    margin-left: 10px;
 }
 
 /* ukryty przycisk */
@@ -85,19 +65,20 @@ input, textarea {
     width: 40px;
     height: 40px;
     opacity: 0;
+    cursor: pointer;
 }
 </style>
-
 </head>
+
 <body>
 
-<div class="container">
-
-<h1>🎮 Serwery Roblox</h1>
+<h1>Serwery Roblox</h1>
 
 <input id="search" placeholder="🔍 Szukaj serwera...">
 
 <div id="adminPanel" class="adminPanel hidden">
+
+    <h2>Panel admina</h2>
 
     <div id="loginBox">
         <input id="password" type="password" placeholder="Hasło">
@@ -105,6 +86,7 @@ input, textarea {
     </div>
 
     <div id="adminContent" class="hidden">
+        <h3>Dodaj serwer</h3>
         <input id="name" placeholder="Nazwa">
         <input id="game" placeholder="Gra">
         <input id="link" placeholder="Link">
@@ -117,8 +99,6 @@ input, textarea {
 
 <div id="list"></div>
 
-</div>
-
 <div id="secretBtn"></div>
 
 <script>
@@ -126,16 +106,17 @@ input, textarea {
 let servers = JSON.parse(localStorage.getItem("servers") || "[]");
 let isAdmin = false;
 
-// panel
-document.getElementById("secretBtn").onclick = () => {
-    document.getElementById("adminPanel").classList.toggle("hidden");
-};
-
-document.addEventListener("keydown", e => {
+// strzałka ↑
+document.addEventListener("keydown", function(e) {
     if (e.key === "ArrowUp") {
         document.getElementById("adminPanel").classList.toggle("hidden");
     }
 });
+
+// ukryty przycisk
+document.getElementById("secretBtn").onclick = function() {
+    document.getElementById("adminPanel").classList.toggle("hidden");
+};
 
 // login
 function login() {
@@ -145,13 +126,14 @@ function login() {
         isAdmin = true;
         document.getElementById("adminContent").classList.remove("hidden");
         document.getElementById("loginBox").classList.add("hidden");
+        alert("Zalogowano!");
         render();
     } else {
-        alert("Złe hasło");
+        alert("Złe hasło!");
     }
 }
 
-// ✅ POPRAWIONE
+// ✅ NAPRAWIONA FUNKCJA
 function addServer() {
     if (!isAdmin) return;
 
@@ -159,10 +141,11 @@ function addServer() {
     let game = document.getElementById("game").value;
     let link = document.getElementById("link").value;
     let desc = document.getElementById("desc").value;
+
     let file = document.getElementById("image").files[0];
 
     if (!name || !game || !link) {
-        alert("Uzupełnij dane");
+        alert("Uzupełnij dane!");
         return;
     }
 
@@ -170,10 +153,10 @@ function addServer() {
         let reader = new FileReader();
         reader.onload = function(e) {
             servers.push({
-                name,
-                game,
-                link,
-                desc,
+                name: name,
+                game: game,
+                link: link,
+                desc: desc,
                 img: e.target.result
             });
             save();
@@ -182,10 +165,10 @@ function addServer() {
         reader.readAsDataURL(file);
     } else {
         servers.push({
-            name,
-            game,
-            link,
-            desc,
+            name: name,
+            game: game,
+            link: link,
+            desc: desc,
             img: ""
         });
         save();
@@ -193,23 +176,25 @@ function addServer() {
     }
 }
 
-// delete
+// usuwanie
 function deleteServer(i) {
+    if (!isAdmin) return;
     servers.splice(i, 1);
     save();
     render();
 }
 
+// zapis
 function save() {
     localStorage.setItem("servers", JSON.stringify(servers));
 }
 
-// search
-document.getElementById("search").oninput = function() {
+// wyszukiwarka
+document.getElementById("search").addEventListener("input", function() {
     render(this.value);
-};
+});
 
-// ✅ render (najczęstsze źródło błędów — już poprawione)
+// render
 function render(filter = "") {
     let list = document.getElementById("list");
     list.innerHTML = "";
@@ -228,17 +213,12 @@ function render(filter = "") {
         let div = document.createElement("div");
         div.className = "card";
 
-        div.innerHTML = `
-            ${s.img ? `${s.img}` : ""}
-            <div class="info">
-                <b>${s.name}</b> (${s.game})<br>
-                ${s.desc || "Brak opisu"}
-            </div>
-            <div>
-                ${s.link}Dołącz</a>
-                ${isAdmin ? `<button class="delete" onclick="deleteServer(${i})">Usuń</button>` : ""}
-            </div>
-        `;
+        div.innerHTML =
+            (s.img ? "<img src='" + s.img + "' class='thumb'>" : "") +
+            "<b>" + s.name + "</b> (" + s.game + ")<br>" +
+            (s.desc || "Brak opisu") + "<br>" +
+            "<a href='" + s.link + "' target='_blank'>Dołącz</a><br>" +
+            (isAdmin ? "<button onclick='deleteServer(" + i + ")'>Usuń</button>" : "");
 
         list.appendChild(div);
     });
