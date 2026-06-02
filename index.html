@@ -1,59 +1,11 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Serwery Roblox</title>
-
-<style>
-body {
-    background: #0f172a;
-    color: white;
-    font-family: Arial;
-    padding: 20px;
-}
-input, textarea {
-    width: 100%;
-    margin: 5px 0;
-    padding: 8px;
-}
-button {
-    padding: 8px;
-    margin-top: 10px;
-}
-</style>
-
+    <title>Test</title>
 </head>
 <body>
 
-<h1>Serwery Roblox</h1>
+<h1>TO DZIAŁA</h1>
 
-<form id="form">
-    <input id="name" placeholder="Nazwa" required>
-    <input id="game" placeholder="Gra" required>
-    <input id="link" placeholder="Link" required>
-    <textarea id="desc" placeholder="Opis"></textarea>
-    <button type="submit">Dodaj</button>
-</form>
-
-<hr>
-
-<ul id="list"></ul>
-
-<script>
-
-let servers = JSON.parse(localStorage.getItem("servers") || "[]");
-
-function save() {
-    localStorage.setItem("servers", JSON.stringify(servers));
-}
-
-function render() {
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-
-    servers.forEach(function(s) {
-        const li = document.createElement("li");
-
-        li.innerHTML =
-            "<b>" + s.name + "</b> (" + s.game + ")<br>" +
-            (s.desc || "Brak opisu") + "<br>" +
+</body>
+</html>
