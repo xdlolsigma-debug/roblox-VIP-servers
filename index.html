@@ -49,22 +49,13 @@ h1 {
     border-radius: 6px;
     text-decoration: none;
     color: black;
-    font-weight: bold;
 }
 
 .delete {
     background: red;
-    border: none;
     color: white;
+    border: none;
     margin-top: 5px;
-    padding: 5px;
-}
-
-.adminPanel {
-    background: #111827;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
 }
 
 input, textarea {
@@ -79,19 +70,21 @@ input, textarea {
     display: none;
 }
 
-#search {
+.adminPanel {
+    background: #111827;
+    padding: 15px;
+    border-radius: 10px;
     margin-bottom: 15px;
 }
 
-/* 🔥 ukryty przycisk */
+/* ukryty przycisk */
 #secretBtn {
     position: fixed;
     bottom: 5px;
     right: 5px;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     opacity: 0;
-    cursor: pointer;
 }
 </style>
 
@@ -112,7 +105,7 @@ input, textarea {
     </div>
 
     <div id="adminContent" class="hidden">
-        <input id="name" placeholder="Nazwa serwera">
+        <input id="name" placeholder="Nazwa">
         <input id="game" placeholder="Gra">
         <input id="link" placeholder="Link">
         <textarea id="desc" placeholder="Opis"></textarea>
@@ -133,22 +126,16 @@ input, textarea {
 let servers = JSON.parse(localStorage.getItem("servers") || "[]");
 let isAdmin = false;
 
-// 🔥 wszystko po załadowaniu strony
-window.onload = function() {
-
-    // ukryty przycisk
-    document.getElementById("secretBtn").onclick = function() {
-        document.getElementById("adminPanel").classList.toggle("hidden");
-    };
-
-    // strzałka ↑
-    document.addEventListener("keydown", function(e) {
-        if (e.key === "ArrowUp") {
-            document.getElementById("adminPanel").classList.toggle("hidden");
-        }
-    });
-
+// panel
+document.getElementById("secretBtn").onclick = () => {
+    document.getElementById("adminPanel").classList.toggle("hidden");
 };
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") {
+        document.getElementById("adminPanel").classList.toggle("hidden");
+    }
+});
 
 // login
 function login() {
@@ -164,7 +151,7 @@ function login() {
     }
 }
 
-// dodawanie
+// ✅ POPRAWIONE
 function addServer() {
     if (!isAdmin) return;
 
@@ -206,7 +193,7 @@ function addServer() {
     }
 }
 
-// usuwanie
+// delete
 function deleteServer(i) {
     servers.splice(i, 1);
     save();
@@ -217,28 +204,49 @@ function save() {
     localStorage.setItem("servers", JSON.stringify(servers));
 }
 
-// wyszukiwanie
+// search
 document.getElementById("search").oninput = function() {
     render(this.value);
 };
 
-// render
+// ✅ render (najczęstsze źródło błędów — już poprawione)
 function render(filter = "") {
     let list = document.getElementById("list");
     list.innerHTML = "";
 
-    let filtered = servers.filter(function(s) {
-        return s.name.toLowerCase().includes(filter.toLowerCase()) ||
-               s.game.toLowerCase().includes(filter.toLowerCase());
-    });
+    let filtered = servers.filter(s =>
+        s.name.toLowerCase().includes(filter.toLowerCase()) ||
+        s.game.toLowerCase().includes(filter.toLowerCase())
+    );
 
     if (filtered.length === 0) {
         list.innerHTML = "<p>Brak serwerów</p>";
         return;
     }
 
-    filtered.forEach(function(s, i) {
+    filtered.forEach((s, i) => {
         let div = document.createElement("div");
         div.className = "card";
 
-        div.innerHTML =
+        div.innerHTML = `
+            ${s.img ? `${s.img}` : ""}
+            <div class="info">
+                <b>${s.name}</b> (${s.game})<br>
+                ${s.desc || "Brak opisu"}
+            </div>
+            <div>
+                ${s.link}Dołącz</a>
+                ${isAdmin ? `<button class="delete" onclick="deleteServer(${i})">Usuń</button>` : ""}
+            </div>
+        `;
+
+        list.appendChild(div);
+    });
+}
+
+render();
+
+</script>
+
+</body>
+</html>
