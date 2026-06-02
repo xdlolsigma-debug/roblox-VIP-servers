@@ -1,33 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Serwery Roblox</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+}
+
+input, textarea {
+    width: 100%;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+button {
+    padding: 10px;
+    width: 100%;
+    background: #22c55e;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.card {
+    background: #1f2937;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+a {
+    color: lightblue;
+}
+</style>
+</head>
+
 <body>
+
+<div class="container">
 
 <h1>Serwery Roblox</h1>
 
 <form id="form">
-<input id="name" placeholder="Nazwa"><br><br>
-<input id="game" placeholder="Gra"><br><br>
-<input id="link" placeholder="Link"><br><br>
-<textarea id="desc" placeholder="Opis"></textarea><br><br>
-<button>Dodaj</button>
+    <input id="name" placeholder="Nazwa serwera" required>
+    <input id="game" placeholder="Gra" required>
+    <input id="link" placeholder="Link do serwera" required>
+    <textarea id="desc" placeholder="Opis"></textarea>
+    <button type="submit">Dodaj serwer</button>
 </form>
 
-<ul id="list"></ul>
+<div id="list"></div>
+
+</div>
 
 <script>
-let servers = [];
 
-document.getElementById("form").onsubmit = function(e) {
+let servers = JSON.parse(localStorage.getItem("servers") || "[]");
+
+function save() {
+    localStorage.setItem("servers", JSON.stringify(servers));
+}
+
+function render() {
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    if (servers.length === 0) {
+        list.innerHTML = "<p>Brak serwerów</p>";
+        return;
+    }
+
+    servers.forEach(function(s, index) {
+        let div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML =
+            "<b>" + s.name + "</b> (" + s.game + ")<br>" +
+            (s.desc || "Brak opisu") + "<br>" +
+            "<a href='" + s.link + "' target='_blank'>Dołącz</a><br><br>" +
+            "<button onclick='usun(" + index + ")'>Usuń</button>";
+
+        list.appendChild(div);
+    });
+}
+
+function usun(i) {
+    servers.splice(i, 1);
+    save();
+    render();
+}
+
+document.getElementById("form").addEventListener("submit", function(e) {
     e.preventDefault();
 
-    let li = document.createElement("li");
-    li.innerHTML =
-        document.getElementById("name").value + " | " +
-        document.getElementById("game").value + " | " +
-        "<a href='" + document.getElementById("link").value + "'>link</a>";
+    servers.push({
+        name: document.getElementById("name").value,
+        game: document.getElementById("game").value,
+        link: document.getElementById("link").value,
+        desc: document.getElementById("desc").value
+    });
 
-    document.getElementById("list").appendChild(li);
-};
+    save();
+    render();
+    this.reset();
+});
+
+render();
+
 </script>
 
 </body>
