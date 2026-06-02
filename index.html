@@ -24,15 +24,20 @@ body {
     border-radius: 10px;
 }
 
+.hidden {
+    display: none;
+}
+
 input, textarea {
     width: 100%;
     margin: 5px 0;
     padding: 10px;
 }
 
-button {
-    padding: 8px;
-    margin-top: bottom: 10px;    margin-top: 5px;
+/* 🔥 niewidzialny przycisk */
+#secretBtn {
+    position: fixed;
+    bottom: 10px;
     right: 10px;
     width: 60px;
     height: 60px;
@@ -50,7 +55,7 @@ button {
 
 <input id="search" placeholder="🔍 Szukaj...">
 
-<!-- PANEL ADMINA -->
+<!-- 🔐 UKRYTY PANEL ADMINA -->
 <div id="adminPanel" class="hidden">
 
     <input id="password" type="password" placeholder="Hasło">
@@ -61,17 +66,17 @@ button {
         <input id="game" placeholder="Gra">
         <input id="link" placeholder="Link">
         <textarea id="desc" placeholder="Opis"></textarea>
-        <button onclick="addServer()">Dodaj</button>
+
+        <!-- ❗ tylko admin -->
+        <button onclick="addServer()">Dodaj serwer</button>
     </div>
 
 </div>
 
-<!-- LISTA -->
 <div id="list"></div>
 
 </div>
 
-<!-- UKRYTY PRZYCISK -->
 <div id="secretBtn"></div>
 
 <script type="module">
@@ -79,7 +84,7 @@ button {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-// TWÓJ FIREBASE
+// 🔑 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBsr99aUgM4rRinUEMPpP8ZR2VvdiQ9JFo",
   authDomain: "roblox-serverd.firebaseapp.com",
@@ -94,18 +99,18 @@ const db = getFirestore(app);
 
 let isAdmin = false;
 
-// ✅ OTWIERANIE PANELU (róg + strzałka)
+// 🔥 otwieranie panelu (tylko sekret)
 document.getElementById("secretBtn").onclick = () => {
     document.getElementById("adminPanel").classList.toggle("hidden");
 };
 
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keydown", e => {
     if (e.key === "ArrowUp") {
         document.getElementById("adminPanel").classList.toggle("hidden");
     }
 });
 
-// ✅ LOGIN (GLOBALNY)
+// ✅ login
 window.login = function() {
     let pass = document.getElementById("password").value;
 
@@ -117,54 +122,46 @@ window.login = function() {
     }
 };
 
-// ✅ DODAWANIE (NAPRAWIONE)
+// ✅ dodawanie (TYLKO ADMIN)
 window.addServer = async function() {
 
-    try {
-
-        if (!isAdmin) return;
-
-        let name = document.getElementById("name").value;
-        let game = document.getElementById("game").value;
-        let link = document.getElementById("link").value;
-        let desc = document.getElementById("desc").value;
-
-        if (!name || !game || !link) {
-            alert("Uzupełnij dane!");
-            return;
-        }
-
-        await addDoc(collection(db, "servers"), {
-            name: name,
-            game: game,
-            link: link,
-            desc: desc
-        });
-
-        alert("✅ Dodano serwer!");
-
-        // czyszczenie pól
-        document.getElementById("name").value = "";
-        document.getElementById("game").value = "";
-        document.getElementById("link").value = "";
-        document.getElementById("desc").value = "";
-
-        loadServers();
-
-    } catch (e) {
-        alert("❌ Błąd: " + e.message);
-        console.error(e);
+    if (!isAdmin) {
+        alert("Nie jesteś adminem!");
+        return;
     }
 
+    let name = document.getElementById("name").value;
+    let game = document.getElementById("game").value;
+    let link = document.getElementById("link").value;
+    let desc = document.getElementById("desc").value;
+
+    if (!name || !game || !link) {
+        alert("Uzupełnij dane!");
+        return;
+    }
+
+    await addDoc(collection(db, "servers"), {
+        name,
+        game,
+        link,
+        desc
+    });
+
+    alert("✅ Dodano serwer!");
+
+    loadServers();
 };
 
-// ✅ USUWANIE
+// ✅ usuwanie (TYLKO ADMIN)
 window.deleteServer = async function(id) {
+
+    if (!isAdmin) return;
+
     await deleteDoc(doc(db, "servers", id));
     loadServers();
 };
 
-// ✅ POBIERANIE Z BAZY
+// ✅ pobieranie
 async function loadServers(filter = "") {
 
     let list = document.getElementById("list");
@@ -186,7 +183,7 @@ async function loadServers(filter = "") {
 
         div.innerHTML =
             "<b>" + s.name + "</b> (" + s.game + ")<br>" +
-            (s.desc || "") + "<br>" +
+            s.desc + "<br>" +
             "<a href='" + s.link + "' target='_blank'>Dołącz</a><br>" +
             (isAdmin ? "<button onclick='deleteServer(\"" + docSnap.id + "\")'>Usuń</button>" : "");
 
@@ -194,7 +191,7 @@ async function loadServers(filter = "") {
     });
 }
 
-// ✅ SEARCH
+// ✅ search
 document.getElementById("search").oninput = function() {
     loadServers(this.value);
 };
@@ -206,12 +203,3 @@ loadServers();
 
 </body>
 </html>
-    cursor: pointer;
-}
-
-.hidden {
-    display: none;
-}
-
-#secretBtn {
-    position: fixed;
